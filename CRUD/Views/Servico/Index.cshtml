@@ -1,0 +1,528 @@
+﻿@model IEnumerable<CRUD.Models.ServicoVM>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Serviço</title>
+
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #000000; /* Preto */
+            color: #f8f9fa;
+        }
+
+        .page-maneger {
+            padding: 20px;
+            background-color: #1a1a1a; /* Preto mais claro */
+            color: #f8f9fa;
+        }
+
+        .modal-header, .modal-footer {
+            background-color: #8e44ad; /* Roxo */
+            border-color: #6c3483; /* Roxo escuro */
+        }
+
+        .modal-body input {
+            background-color: #e84393; /* Rosa */
+            color: white;
+        }
+
+        .table th, .table td {
+            color: #f8f9fa;
+            border: 1px solid #ddd;
+        }
+
+        .table thead {
+            background-color: #6c3483; /* Roxo escuro */
+        }
+
+        .btn-success {
+            background-color: #0984e3; /* Azul */
+            border-color: #0984e3;
+        }
+
+            .btn-success:hover {
+                background-color: #74b9ff; /* Azul claro */
+                border-color: #74b9ff;
+            }
+
+        .form-control {
+            background-color: #1a1a1a;
+            color: #f8f9fa;
+            border: 1px solid #6c3483;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <input id="filtro" type="text" class="form-control" placeholder="Pesquisar Serviço...">
+            </div>
+            <div class="col-md-6 text-end">
+                <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#InserirServico">
+                    <i class="fa fa-plus"></i> Adicionar Serviço
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <table class="table mt-3" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th style="width: 50px; background-color: #8e44ad;">#</th>
+                <th style="width: 200px; background-color: #8e44ad;">Tipo de Serviço</th>
+                <th style="width: 150px; background-color: #8e44ad;">Valor</th>
+                <th colspan="2" class="text-center" style="background-color: #8e44ad;">Ações</th>
+            </tr>
+        </thead>
+    </table>
+
+    <div class="container page-maneger">
+        <div style="max-height: 300px; overflow-y: auto;">
+            <table id="TbClientesBody" class="table">
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var servico in Model)
+                        {
+                            <tr>
+                                <td>@servico.Id</td>
+                                <td>@servico.TipoServico</td>
+                                <td>R$ @servico.Valor.ToString("F2")</td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-warning" onclick="definirEdt('@servico.Id', '@servico.TipoServico', '@servico.Valor')" data-bs-toggle="modal" data-bs-target="#EditarServico">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-danger" onclick="definirExc('@servico.Id', '@servico.TipoServico', '@servico.Valor')" data-bs-toggle="modal" data-bs-target="#ExcluirServico">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="5" class="text-center">Nenhum serviço encontrado.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="text-center mt-3">
+            <strong>Total de Serviços: <span id="registroCount">0</span></strong>
+        </div>
+    </div>
+
+    <!-- Modal Inserir -->
+    <div class="modal fade" id="InserirServico" tabindex="-1" aria-labelledby="InserirServicoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Inserir Serviço</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="tipo" class="form-label">Tipo de Serviço</label>
+                        <select class="form-select" id="tipo">
+                            <option value="">Selecione</option>
+                            <option value="Limpeza">Limpeza</option>
+                            <option value="Manutenção">Manutenção</option>
+                            <option value="Jardinagem">Jardinagem</option>
+                            <option value="Pintura">Pintura</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Consultoria">Consultoria</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Valor" class="form-label">Valor</label>
+                        <input type="number" class="form-control" id="Valor" step="0.01" placeholder="Ex: 150.00">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" onclick="InserirServico()">Inserir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar -->
+    <div class="modal fade" id="EditarServico" tabindex="-1" aria-labelledby="EditarServicoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Serviço</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="ServicoId" />
+                    <div class="mb-3">
+                        <label for="TipoServico" class="form-label">Tipo de Serviço</label>
+                        <select class="form-select" id="TipoServico">
+                            <option value="">Selecione</option>
+                            <option value="Limpeza">Limpeza</option>
+                            <option value="Manutenção">Manutenção</option>
+                            <option value="Jardinagem">Jardinagem</option>
+                            <option value="Pintura">Pintura</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Consultoria">Consultoria</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="ValorServico" class="form-label">Valor</label>
+                        <input type="number" class="form-control" id="ValorServico" step="0.01">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" onclick="AtualizarServico()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Excluir -->
+    <div class="modal fade" id="ExcluirServico" tabindex="-1" aria-labelledby="ExcluirServicoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Excluir Serviço</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="ServicoIdExcluir" />
+                    <p>Tem certeza que deseja excluir este serviço?</p>
+                    <strong id="ServicoNomeExcluir"></strong>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-danger" onclick="ExcluirServico()">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function definirEdt(id, tipo, valor) {
+            $('#ServicoId').val(id);
+            $('#TipoServico').val(tipo);
+            $('#ValorServico').val(valor);
+        }
+
+        function definirExc(id, tipo, valor) {
+            $('#ServicoIdExcluir').val(id);
+            $('#ServicoNomeExcluir').text(tipo + ' - R$' + parseFloat(valor).toFixed(2));
+        }
+
+       function InserirServico() {
+            // Obtém os valores dos campos
+            var tipo = $('#tipo').val();
+            var valor = $('#Valor').val();
+
+            // Exibe os valores no console para depuração
+            console.log("Tipo de Serviço: " + tipo);
+            console.log("Valor: " + valor);
+
+            // Validação dos campos
+            if (tipo.trim() === "") {
+                alert("Por favor, preencha o campo Tipo de Serviço.");
+                return;
+            }
+            if (valor.trim() === "" || isNaN(valor) || parseFloat(valor) <= 0) {
+                alert("Por favor, insira um valor válido para o serviço.");
+                return;
+            }
+
+            // Dados a serem enviados ao servidor
+            var dados = {
+                TipoServico: tipo,
+                Valor: valor
+            };
+
+            console.log(dados); // Exibe os dados no console para depuração
+
+            // Chamada AJAX para enviar os dados para o servidor
+            $.ajax({
+                url: '@Url.Action("InserirServico", "Servico")',  // Ajuste conforme a sua rota
+                type: "POST",
+                dataType: "json",
+                data: dados,
+                success: function (res) {
+                    // Esconde o overlay e loader se tiver
+                    $("#overlay").hide();
+                    $("#loader").hide();
+
+                    // Exibe a mensagem de sucesso ou erro usando o SweetAlert
+                    if (res.success) {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: 'success',
+                            title: 'Sucesso',
+                            text: res.message || 'Serviço inserido com sucesso!',
+                            confirmButtonText: 'OK',
+                            width: '400px',
+                            padding: '20px',
+                            customClass: {
+                                popup: 'custom-popup'
+                            }
+                        }).then(function () {
+                            // Fecha o modal após a confirmação
+                            $('#InserirServico').modal('hide');
+                            // Recarrega a página para atualizar a lista de serviços
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: 'error',
+                            title: 'Erro',
+                            text: res.message || 'Não foi possível inserir o serviço.',
+                            confirmButtonText: 'OK',
+                            width: '400px',
+                            padding: '20px',
+                            customClass: {
+                                popup: 'custom-popup'
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        position: "top-end",
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Ocorreu um erro ao processar a solicitação.',
+                        confirmButtonText: 'OK',
+                        width: '400px',
+                        padding: '20px',
+                        customClass: {
+                            popup: 'custom-popup'
+                        }
+                    });
+                }
+            });
+        }
+
+
+       function AtualizarServico() {
+            // Obtém os valores dos campos
+            var id = $('#ServicoId').val();
+            var tipo = $('#TipoServico').val();
+            var valor = $('#ValorServico').val();
+
+            // Exibe os valores no console para depuração
+            console.log("ID do Serviço: " + id);
+            console.log("Tipo de Serviço: " + tipo);
+            console.log("Valor: " + valor);
+
+            // Validação dos campos
+            if (tipo.trim() === "") {
+                alert("Por favor, preencha o campo Tipo de Serviço.");
+                return;
+            }
+            if (valor.trim() === "" || isNaN(valor) || parseFloat(valor) <= 0) {
+                alert("Por favor, insira um valor válido para o serviço.");
+                return;
+            }
+
+            // Dados a serem enviados ao servidor
+            var dados = {
+                id: id,
+                TipoServico: tipo,
+                Valor: valor
+            };
+
+            console.log(dados); // Exibe os dados no console para depuração
+
+            // Chamada AJAX para enviar os dados para o servidor
+            $.ajax({
+                url: '@Url.Action("AtualizarServico", "Servico")',  // Ajuste conforme a sua rota
+                type: "POST",
+                dataType: "json",
+                data: dados,
+                success: function (res) {
+                    // Esconde o overlay e loader se tiver
+                    $("#overlay").hide();
+                    $("#loader").hide();
+
+                    // Exibe a mensagem de sucesso ou erro usando o SweetAlert
+                    if (res.success) {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: 'success',
+                            title: 'Atualizado',
+                            text: res.message || 'Serviço atualizado com sucesso!',
+                            confirmButtonText: 'OK',
+                            width: '400px',
+                            padding: '20px',
+                            customClass: {
+                                popup: 'custom-popup'
+                            }
+                        }).then(function () {
+                            // Fecha o modal após a confirmação
+                            $('#AtualizarServico').modal('hide');
+                            // Recarrega a página para atualizar a lista de serviços
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: 'error',
+                            title: 'Erro',
+                            text: res.message || 'Não foi possível atualizar o serviço.',
+                            confirmButtonText: 'OK',
+                            width: '400px',
+                            padding: '20px',
+                            customClass: {
+                                popup: 'custom-popup'
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        position: "top-end",
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Ocorreu um erro ao processar a solicitação.',
+                        confirmButtonText: 'OK',
+                        width: '400px',
+                        padding: '20px',
+                        customClass: {
+                            popup: 'custom-popup'
+                        }
+                    });
+                }
+            });
+        }
+
+
+                function ExcluirServico() {
+            // Obtém o ID do serviço
+            var id = $('#ServicoIdExcluir').val();
+
+            // Exibe o ID no console para depuração
+            console.log("ID do Serviço a Excluir: " + id);
+
+            // Validação simples
+            if (!id) {
+                alert("ID do serviço não encontrado.");
+                return;
+            }
+
+            // Dados a serem enviados ao servidor
+            var dados = { id: id };
+
+            console.log(dados);  // Exibe os dados no console para depuração
+
+            // Exibe overlay e loader, caso tenha
+            $("#overlay").show();
+            $("#loader").show();
+
+            // Chamada AJAX para enviar os dados para o servidor
+            $.ajax({
+                url: '@Url.Action("ExcluirServico", "Servico")',  // Ajuste conforme a sua rota
+                type: "POST",
+                dataType: "json",
+                data: dados,
+                success: function (res) {
+                    // Esconde o overlay e loader se tiver
+                    $("#overlay").hide();
+                    $("#loader").hide();
+
+                    // Exibe a mensagem de sucesso ou erro usando o SweetAlert
+                    if (res.success) {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: 'success',
+                            title: 'Excluído',
+                            text: res.message || 'Serviço excluído com sucesso!',
+                            confirmButtonText: 'OK',
+                            width: '400px',
+                            padding: '20px',
+                            customClass: {
+                                popup: 'custom-popup'
+                            }
+                        }).then(function () {
+                            // Fecha o modal após a confirmação
+                            $('#ExcluirServico').modal('hide');
+                            // Recarrega a página para atualizar a lista de serviços
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: 'error',
+                            title: 'Erro',
+                            text: res.message || 'Não foi possível excluir o serviço.',
+                            confirmButtonText: 'OK',
+                            width: '400px',
+                            padding: '20px',
+                            customClass: {
+                                popup: 'custom-popup'
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    $("#overlay").hide();
+                    $("#loader").hide();
+                    Swal.fire({
+                        position: "top-end",
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Ocorreu um erro ao processar a solicitação.',
+                        confirmButtonText: 'OK',
+                        width: '400px',
+                        padding: '20px',
+                        customClass: {
+                            popup: 'custom-popup'
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+    <script>
+        $(document).ready(function () {
+            // Função para atualizar o contador de registros
+            function atualizarContador() {
+                var total = $('#TbClientesBody tbody tr:visible').length;
+                $('#registroCount').text(total);
+            }
+
+            // Função de filtro
+            $('#filtro').on('keyup', function () {
+                var valorFiltro = $(this).val().toLowerCase();
+
+                $('#TbClientesBody tbody tr').filter(function () {
+                    $(this).toggle(
+                        $(this).text().toLowerCase().indexOf(valorFiltro) > -1
+                    );
+                });
+
+                atualizarContador(); // Atualiza o contador após filtrar
+            });
+
+            // Atualiza o contador ao carregar a página
+            atualizarContador();
+        });
+    </script>
+
+</body>
+</html>
